@@ -5,16 +5,11 @@ function wrapper(brick)
         if brick.inputReadSI(4, 0) > 50
             turn(-1);
             move(1);
-            if state == 2
-                brick.MoveMotor('C', 100);
-                pause(5);
-                brick.MoveMotor('C', 0);
-                state = 3;
-            end
         else
             turn(1);
         end
     end
+    brick.moveMotor('C', 0);
     function correct()
         while abs(brick.inputReadSI(2, 0) - desiredAng) > 0
             dir = sign(brick.inputReadSI(2, 0) - desiredAng);
@@ -40,20 +35,28 @@ function wrapper(brick)
     function move(sign)
         correct();
         brick.MoveMotor('AB', 100 * sign);
-        for i=1:13
+        colorCheck(13);
+        brick.MoveMotor('A', 0);
+        brick.MoveMotor('B', 0);
+        colorCheck(8);
+        correct();
+        if state == 2
+            brick.MoveMotor('C', 100);
+            pause(5);
+            state = 3;
+        end
+    end
+    function colorCheck(n)
+        for i=1:n
             data = brick.inputReadRaw(3, Device.ColRGB, 3);
             redColor = typecast(uint8(data(6:9)),'uint32');
             if(state == 1 && redColor == 255)
                 state = 2;
             end
-             if(state == 3 && redColor == 0)
+            if(state == 3 && redColor == 0)
                 state = 4;
-             end
+            end
             pause(0.1);
         end
-        brick.MoveMotor('A', 0);
-        brick.MoveMotor('B', 0);
-        pause(0.9);
-        correct();
     end
 end
